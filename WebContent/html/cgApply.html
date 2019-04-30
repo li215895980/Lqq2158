@@ -1,0 +1,473 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Insert title here</title>
+<link rel="stylesheet" type="text/css"
+	href="../jquery-easyui-1.6.6/themes/default/easyui.css" />
+<link rel="stylesheet" type="text/css"
+	href="../jquery-easyui-1.6.6/themes/icon.css" />
+<script type="text/javascript"
+	src="../jquery-easyui-1.6.6/jquery.min.js"></script>
+<script type="text/javascript"
+	src="../jquery-easyui-1.6.6/jquery.easyui.min.js"></script>
+<script type="text/javascript" 
+	src="../jquery-easyui-1.6.6/locale/easyui-lang-zh_CN.js"></script>
+	
+	<script type="text/javascript">
+		addUrl="../inBuyApply/addInBuyApply.do";
+		modifyUrl="../inBuyApply/updateInBuyApply.do";
+		add="";
+		proval="";
+		function serializeObject(form) {
+			var o = {};
+			$.each(form.serializeArray(), function(index) {
+				if (o[this['name']]) {
+					o[this['name']] = o[this['name']] + "," + this['value'];
+				} else {
+					o[this['name']] = this['value'];
+				}
+			});
+			return o;
+		}
+		$(function(){
+			init();
+			$("#dg").datagrid({
+				onClickRow:function(){
+					if(add!="add"){
+						var row=$("#dg").datagrid("getSelected");
+						if(row.inbastate=="驳回"){
+							proval=row.approvalview;
+							$("#inBuyApplyManager_seebtn").linkbutton("enable");
+						}else{
+							$("#inBuyApplyManager_seebtn").linkbutton("disable");
+						}
+						$("#inBuyApplyEditForm").form('load',row);
+						$("#dgDetail").datagrid('loadData',row.inbuyapplydetail);
+					}
+				}
+			});
+			$("#inbtname").focus(function(){
+				$.messager.confirm("提示","是否添加采购类型？",function(r){
+		    		if(r){
+		    			$("#dlg3").dialog("open").dialog("setTitle","采购类型");
+		    			$("#dg3").datagrid("reload");
+		    		}
+		    	});
+			});
+		});
+		function seeinBuyApply(){
+			$.messager.alert("驳回意见",proval,"info");
+		}
+		function chooseInBuyType(){
+	    	var row=$("#dg3").datagrid("getSelected");
+	    	$("#inbtid").val(row.inbtid);
+			$("#inbtname").val(row.inbtname);
+			closeInBuyTypeDialog();
+	    }
+		function closeInBuyTypeDialog(){
+	    	$("#s_ingtname").val("");
+			$('#dg3').datagrid('load',{
+				s_inbtname:""
+			});
+			$("#dlg3").dialog("close");
+	    }
+		function newinBuyApplyInfo(){
+			url=addUrl;
+			add="add";
+			$("#inBuyApplyEditForm").form('clear');
+			$("#inbaid").val("0");
+			$("#inBuyApplyEditForm :input").removeAttr("readonly");
+			$("#inBuyApplyEditForm :input").attr("enable");
+			$("#inBuyApplyEditForm").form("enableValidation");
+			$("#inBuyApplyManager_savebtn").linkbutton("disable");
+			$("#inBuyApplyManager_seebtn").linkbutton("disable");
+			$("#inBuyApplyManager_canclebtn").linkbutton("enable");
+			$("#inBuyApplyManager_editbtn").linkbutton("disable");
+			$("#inBuyApplyManager_delbtn").linkbutton("disable");
+			$("#inBuyApplyManager_playbtn").linkbutton("disable");
+			$("#inBuyApplyDeatilAdd").linkbutton("enable");
+			$("#inBuyApplyDeatilUpdate").linkbutton("enable");
+			$("#inBuyApplyDeatilDel").linkbutton("enable");
+			$("#inBuyApplyDeatilSav").linkbutton("enable");
+			$("#dgDetail").datagrid('loadData',{
+				totle:0,
+				rows:[]
+			});
+		}
+		function ibaDetailModify(){
+			var rows = $('#dgDetail').datagrid('getRows');
+			$.each(rows,function(index,item){
+				var ind = $('#dgDetail').datagrid('getRowIndex',item);
+				$('#dgDetail').datagrid('beginEdit', ind);
+			})
+		}
+		function ibaDetailManager(){
+			$('#dgDetail').datagrid('appendRow',{});
+			var index=$('#dgDetail').datagrid('getRows').length-1;
+			$('#dgDetail').datagrid('beginEdit',index);
+   			/* $("#dlg2").dialog("open").dialog("setTitle","物品生产商");
+   			$("#dg2").datagrid("reload"); */
+		}
+		/* function chooseInGoodsInfo(){
+		    	var row=$("#dg2").datagrid("getSelected");
+		    	var inginame = row.inginame;
+		    	var ingiid=row.ingiid;
+		    	var data=[{inginame:inginame},{ingiid:ingiid}]	
+		    	$("#dgDetail").datagrid("updateRow",{index:index,row:data});
+				closeInGoodsInfoDialog();
+		    }
+		function closeInGoodsInfoDialog(){
+	    	$("#s_inginame").val("");
+			$('#dg2').datagrid('load',{
+				s_inginame:""
+			});
+			$("#dlg2").dialog("close");
+	    }
+		function searchIngi() {
+			$('#dg2').datagrid('load', {
+				s_inginame : $("#s_inginame").val()
+			});
+		} */
+		function ibaDetailDelete(){
+			var rows = $('#dgDetail').datagrid('getSelections');
+			$.each(rows,function(index,item){
+				var ind = $('#dgDetail').datagrid('getRowIndex',item);
+				$('#dgDetail').datagrid('deleteRow', ind);
+			})
+		}
+		function saveiba_detail(){
+			var rows = $('#dgDetail').datagrid('getRows');
+			$.each(rows,function(index,item){
+				$('#dgDetail').datagrid('endEdit',index);
+			});
+			$("#inBuyApplyManager_savebtn").linkbutton("enable");
+		}
+		function cancleinBuyApply(){
+			init();
+		}
+		function init(){
+			$("#inBuyApplyManager_savebtn").linkbutton("disable");
+			$("#inBuyApplyManager_canclebtn").linkbutton("disable");
+			$("#inBuyApplyDeatilAdd").linkbutton("disable");
+			$("#inBuyApplyDeatilUpdate").linkbutton("disable");
+			$("#inBuyApplyDeatilDel").linkbutton("disable");
+			$("#inBuyApplyDeatilSav").linkbutton("disable");
+			$("#inBuyApplyManager_seebtn").linkbutton("disable");
+			$("#inBuyApplyManager_neibatn").linkbutton("enable");
+			$("#inBuyApplyManager_editbtn").linkbutton("enable");
+			$("#inBuyApplyManager_playbtn").linkbutton("enable");
+			$("#inBuyApplyManager_delbtn").linkbutton("enable");
+			$("#inBuyApplyEditForm :input").removeAttr("disabled","disabled");
+			$("#inBuyApplyEditForm").form("disableValidation");
+			$("#inBuyApplyEditForm :input").attr("readonly","readonly");
+			$("#inBuyApplyEditForm").form('clear');
+			$("#inbastate").attr("readonly","readonly")			
+			$("#dgDetail").datagrid('loadData',{
+				totle:0,
+				rows:[]
+			});
+			add="";
+		}
+		function saveForm(){
+			var form = $("#inBuyApplyEditForm");
+			var inbuyapplydetail = $('#dgDetail').datagrid('getRows');
+			var inbuyapply=serializeObject(form);
+			inbuyapply.inbuyapplydetail=inbuyapplydetail;
+			alert(JSON.stringify(inbuyapply))
+			$.ajax({
+				url: url, 
+				type: "post",
+				dataType: "json",
+				contentType: "application/json;charset=utf-8",
+				data: JSON.stringify(inbuyapply),
+				success: function(result){
+					if(result.success){
+						$.messager.alert("系统提示","保存成功","info");
+						$("#dg").datagrid("reload");
+						init();
+					}else{
+						$.messager.alert("系统提示","保存失败","warning");
+					}
+				},
+				error:function(){
+					$.messager.alert("系统提示","系统繁忙","error");
+				}
+			});
+			url="";
+		}
+		function delinBuyApply(){
+			var row = $("#dg").datagrid("getSelected");
+			if(row==null){
+				$.messager.alert('系统提示','请选择要删除的数据！');
+				return;
+			}
+			var inbaid=row.inbaid;
+			$.messager.confirm("系统提示","您确认要删除这条数据吗？",function(r){
+				if(r){
+					$.ajax({
+						url: "../inBuyApply/deleteInBuyApply.do",
+						type: "post",
+						dataType: "json",
+						data: {inbaid:inbaid},
+						success: function(result){
+							if(result.success){
+								$.messager.alert("系统提示","删除成功","info");
+								$("#dg").datagrid("reload");
+								init();
+							}else{
+								$.messager.alert("系统提示","删除失败","warning");
+							}
+						},
+						error:function(){
+							$.messager.alert("系统提示","系统繁忙","error");
+						}
+					});
+				}
+			});
+		}
+		function editinBuyApply(){
+			var row = $("#dg").datagrid("getSelected");
+			if(row==null){
+				$.messager.alert('系统提示','请选择要编辑的数据！');
+				return;
+			}else if(row.inbastate!=0 && row.inbastate!=-1){
+				$.messager.alert('系统提示','数据已提交，无法修改！');
+				return;
+			}
+			url=modifyUrl;
+			$("#inBuyApplyEditForm :input").removeAttr("readonly");
+			$("#inBuyApplyEditForm :input").attr("enable");
+			$("#inBuyApplyEditForm").form("enableValidation");
+			$("#inBuyApplyManager_savebtn").linkbutton("disable");
+			$("#inBuyApplyManager_canclebtn").linkbutton("enable");
+			$("#inBuyApplyManager_editbtn").linkbutton("disable");
+			$("#inBuyApplyManager_delbtn").linkbutton("disable");
+			$("#inBuyApplyManager_neibatn").linkbutton("disable");
+			$("#inBuyApplyManager_playbtn").linkbutton("disable");
+			$("#inBuyApplyManager_seebtn").linkbutton("disable");
+			$("#inBuyApplyDeatilAdd").linkbutton("enable");
+			$("#inBuyApplyDeatilUpdate").linkbutton("enable");
+			$("#inBuyApplyDeatilDel").linkbutton("enable");
+			$("#inBuyApplyDeatilSav").linkbutton("enable");
+		}
+		function playinBuyApply(){
+			var selectedRows=$("#dg").datagrid('getSelections');
+			if(selectedRows.length==0){
+				$.messager.alert('系统提示','请选择要提交的数据！');
+				return;}
+			var strIds=[];
+			for(var i=0;i<selectedRows.length;i++){
+				if(selectedRows[i].inbastate=="提交未审核"){
+					$.messager.alert('系统提示',selectedRows[i].inbaname + "已提交，请耐心等候");
+					return;
+				}
+				strIds.push(selectedRows[i].inbaid);
+			}
+			var ids=strIds.join(",");
+			$.messager.confirm("系统提示","您确认要提交这<font color=red>"+selectedRows.length+"</font>条数据吗？",function(r){
+				if(r){
+					$.post("../inBuyApply/updateInBuyApplyById.do",{delIds:ids},function(result){
+						if(result.success){
+							$.messager.alert('系统提示',"您已成功提交这<font color=red>"+result.count+"</font>条数据！");
+							$("#dg").datagrid("reload");
+						}else{
+							$.messager.alert('系统提示',result.errorMsg);
+						}
+					},"json");
+				}
+			});
+		}
+	</script>
+</head>
+<body>
+	<div class="easyui-layout" data-options="fit:true">
+		<div data-options="region:'north'"
+			style="height: 32px; background-color: #E0ECFF; width: 1235px; background-position: initial initial; background-repeat: initial initial;">
+			<div style="float: right; padding-right: 20px">
+				名称: <input class="easyui-validatebox" style="width: 80px"
+					name="searchValue" id="searchValue"> <a
+					href="javascript:void(0)" class="easyui-linkbutton"
+					iconCls="icon-search" onclick="inBuyApplyManager.search()">查询</a>
+			</div>
+			<div>
+				<a id="inBuyApplyManager_neibatn" href="javascript:void(0)"
+					onclick="newinBuyApplyInfo()"
+					class="easyui-linkbutton" iconCls="icon-add" plain="true">新建</a>
+			    <a  id="inBuyApplyManager_editbtn" href="javascript:void(0)"
+					onclick="editinBuyApply()"
+					class="easyui-linkbutton" iconCls="icon-edit" plain="true">修改</a> 
+				<a	id="inBuyApplyManager_delbtn" href="javascript:void(0)"
+					onclick="delinBuyApply()"
+					class="easyui-linkbutton" iconCls="icon-remove" plain="true">删除</a> 
+			    <a	id="inBuyApplyManager_savebtn" href="javascript:void(0)"
+					onclick="saveForm()" class="easyui-linkbutton"
+					iconCls="icon-save" plain="true">保存</a>
+				<a  id="inBuyApplyManager_canclebtn" href="javascript:void(0)"
+					onclick="cancleinBuyApply()"
+					class="easyui-linkbutton" iconCls="icon-cancel" plain="true">取消</a>
+				<a  id="inBuyApplyManager_playbtn" href="javascript:void(0)"
+					onclick="playinBuyApply()"
+					class="easyui-linkbutton" iconCls="icon-save" plain="true">提交</a>
+				<a  id="inBuyApplyManager_seebtn" href="javascript:void(0)"
+					onclick="seeinBuyApply()"
+					class="easyui-linkbutton"  plain="true">查看驳回意见</a>
+			</div>
+		</div>
+		<div data-options="region:'west',split:true,"
+			style="width: 375px;">
+			<div class="easyui-layout" data-options="fit:true">		
+				<div data-options="region:'center'"> 		
+					<table id="dg" title="申请信息" class="easyui-datagrid" fitColumns="true" pagination="true" 
+					rownumbers="true" url="../inBuyApply/findAllInBuyApply.do" fit="true" singleSelect="true">
+				     	<thead>
+				     		<tr>
+				     			<th field="inbaname" width="50" align="center" data-options="sortable:true">采购申请名称</th>
+								<th field="businame" width="50" align="center" data-options="sortable:true">采购申请人姓名</th>
+								<th field="remark" width="50" align="center" data-options="sortable:true">备注</th>
+							</tr>
+				   		</thead>
+				   	</table>
+				</div>	
+			</div>
+		</div>
+		<div data-options="region:'center'" ">
+			<div id="tab_show" align="center" style="height:220px;background-color: #F7F7F7;margin-top:-16px" >
+				<h3 align="center">编辑框</h3>
+				<form id="inBuyApplyEditForm">
+					<input type="hidden" name="inbaid" id="inbaid" />
+					<table>
+						<tr>
+							<td><label>申请编码：</label></td>
+							<td><input class="easyui-validatebox" type="text" 
+							id="inbacode" name="inbacode" data-options="required:true" maxlength="20" width="200px"/></td>
+							<td><label>申请名称：</label></td>
+							<td><input class="easyui-validatebox" type="text" 
+							id="inbaname" name="inbaname" data-options="required:true" maxlength="20" width="200px"/></td>
+						</tr>
+						<tr>
+							<td><label>申请部门：</label></td>
+							<td><input class="easyui-validatebox" type="text" 
+							id="busideptid" name="busideptid" data-options="required:true" maxlength="20" width="200px"/></td>
+							<td><label>申请机构：</label></td>
+							<td><input class="easyui-validatebox" type="text" 
+							id="busiorgid" name="busiorgid" data-options="required:true" maxlength="20" width="200px"/></td>
+						</tr>
+						<tr>
+							<td><label>采购类型：</label><input type="hidden" id="inbtid" name="inbtid"/></td>
+							<td><input class="easyui-validatebox" type="text" 
+							id="inbtname" name="inbtname" data-options="required:true" maxlength="20" width="200px"/></td>
+							<td><label>申请时间：</label></td>
+							<td>
+								<input id="inbadate" name="inbadate" class="easyui-datetimebox"  labelPosition="top" style="width:100%;">
+							</td>
+						</tr>
+						<tr>
+							<td><label>审核状态：</label></td>
+							<td><input class="easyui-validatebox" type="text" 
+							id="inbastate" name="inbastate" data-options="required:true" maxlength="20" width="200px"/></td>
+							<td><label>申请人姓名：</label></td>
+							<td><input class="easyui-validatebox" type="text" 
+							id="businame" name="businame" data-options="required:true" maxlength="20" width="200px"/></td>
+						</tr>
+						<tr>
+							<td><label>事由：</label></td>
+							<td><input class="easyui-validatebox" type="text"
+							id="inbareason" name="inbareason" data-options="required:true" maxlength="200" width="200px" height="400px" /></td>
+							<td><label>备注：</label></td>
+							<td><input class="easyui-validatebox" type="text"
+							id="remark" name="remark" data-options="required:true" maxlength="200" width="200px" height="400px" /></td>
+						</tr>
+					</table>
+				</form>
+			</div>
+			<div style="clear: both;"></div>
+			<div class="easyui-tabs" style="height: 382px;margin-top: -16px;">
+				<div title="申请明细" fit="true" data-options="border:true">
+					<table id="dgDetail" class="easyui-datagrid" fitColumns="true" pagination="true" 
+					rownumbers="true"  fit="true" toolbar="#tb" >
+				     	<thead>
+				     		<tr>
+				     			<th field="cb" checkbox="true" align="center"></th>
+								<th field="inginame" width="50" align="center"data-options="editor:{type:'validatebox',options:{
+										disabled:false,required: true}}">物品名称</th>
+								<th field="ingiid" width="50" hidden="true" align="center"></th>
+								<th field="mycou" width="50" align="center" data-options="editor:{type:'validatebox',options:{
+										disabled:false,required: true}}">数量</th>
+								<th field="myprice" width="50" align="center" data-options="editor:{type:'validatebox',options:{
+										disabled:false,required: true}}">单价</th>
+								<th field="mymoney" width="50" align="center" data-options="editor:{type:'validatebox',options:{
+										disabled:false,required: true}}">总价</th>
+								<th field="usecou" width="50" align="center" data-options="editor:{type:'validatebox',options:{
+										disabled:false,required: true}}">引用数量</th>
+								<th field="taxprice" width="50" align="center" data-options="editor:{type:'validatebox',options:{
+										disabled:false,required: true}}">含税单价</th>
+								<th field="taxmoney" width="50" align="center" data-options="editor:{type:'validatebox',options:{
+										disabled:false,required: true}}">含税金额</th>
+								<th field="invoicesmoney" width="50" align="center" data-options="editor:{type:'validatebox',options:{
+										disabled:false,required: true}}">开票金额</th>
+								<th field="paymoney" width="50" align="center" data-options="editor:{type:'validatebox',options:{
+										disabled:false,required: true}}">付款金额</th>
+								<th field="remark" width="50" align="center" data-options="editor:{type:'validatebox',options:{
+										disabled:false,required: true}}">备注</th>
+							</tr>
+				   		</thead>
+				   	</table>
+					<div id="tb">
+						<div>
+							<a href="javascript:ibaDetailManager()" class="easyui-linkbutton" iconCls="icon-add" plain="true" id="inBuyApplyDeatilAdd">添加</a>
+							<a href="javascript:ibaDetailModify()" class="easyui-linkbutton" iconCls="icon-edit" plain="true" id="inBuyApplyDeatilUpdate">修改</a>
+							<a href="javascript:ibaDetailDelete()" class="easyui-linkbutton" iconCls="icon-remove" plain="true" id="inBuyApplyDeatilDel">删除</a>
+							<a href="javascript:saveiba_detail()" class="easyui-linkbutton" iconCls="icon-save" plain="true" id="inBuyApplyDeatilSav">保存</a>
+				      	</div>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+		<div id="dlg2" class="easyui-dialog" style="width: 500px;height: 480px;padding:10px 20px;" closed="true" buttons="#dlg2-buttons">
+			<div style="height: 40px" align="center">
+				物品名称：<input type="text" id="s_inginame" name="s_inginame" onkeydown="if(event.keyCode==13) searchInsa()"/>
+				<a href="javascript:searchIngi()" class="easyui-linkbutton" iconCls="icon-search" plain="true">搜索</a>
+			</div>
+			<div style="height: 350px;">
+				<table id="dg2" title="物品类别" class="easyui-datagrid" fitColumns="true" pagination="true" rownumbers="true" fit="true" singleSelect="true" 
+				url="../inGoodsInfo/findAllInGoodsInfos.do">
+					<thead>
+						<tr>
+							<th field="ingiid" align="center" hidden="true"></th>
+							<th field="inginame" width="50" align="center">物品名称</th>
+							<th field="remark" width="50" align="center">备注</th>
+						</tr>
+					</thead>
+				</table>
+			</div>
+		</div>
+		<div id="dlg2-buttons">
+			<a href="javascript:chooseInGoodsInfo()" class="easyui-linkbutton" iconCls="icon-ok">确定</a>
+			<a href="javascript:closeInGoodsInfoDialog()" class="easyui-linkbutton" iconCls="icon-cancel">关闭</a>
+		</div>
+		<div id="dlg3" class="easyui-dialog" style="width: 500px;height: 480px;padding:10px 20px;" closed="true" buttons="#dlg3-buttons">
+			<div style="height: 40px" align="center">
+				采购类型名称：<input type="text" id="s_inbtname" name="s_inbtname" onkeydown="if(event.keyCode==13) searchInsa()"/>
+				<a href="javascript:searchIngi()" class="easyui-linkbutton" iconCls="icon-search" plain="true">搜索</a>
+			</div>
+			<div style="height: 350px;">
+				<table id="dg3" title="物品类别" class="easyui-datagrid" fitColumns="true" pagination="true" rownumbers="true" fit="true" singleSelect="true" 
+				url="../inbuytype/findInbuytype.do">
+					<thead>
+						<tr>
+							<th field="inbtid" align="center" hidden="true"></th>
+							<th field="inbtname" width="50" align="center">类型名称</th>
+							<th field="remark" width="50" align="center">备注</th>
+						</tr>
+					</thead>
+				</table>
+			</div>
+		</div>
+		<div id="dlg3-buttons">
+			<a href="javascript:chooseInBuyType()" class="easyui-linkbutton" iconCls="icon-ok">确定</a>
+			<a href="javascript:closeInBuyTypeDialog()" class="easyui-linkbutton" iconCls="icon-cancel">关闭</a>
+		</div>
+</body>
+</html>
