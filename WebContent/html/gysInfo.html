@@ -1,0 +1,530 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="UTF-8">
+		<title>Insert title here</title>
+		<link rel="stylesheet" type="text/css" href="../jquery-easyui-1.6.6/themes/default/easyui.css"/>
+		<link rel="stylesheet" type="text/css" href="../jquery-easyui-1.6.6/themes/icon.css"/>
+		<script type="text/javascript" src="../jquery-easyui-1.6.6/jquery.min.js"></script>
+		<script type="text/javascript" src="../jquery-easyui-1.6.6/jquery.easyui.min.js"></script>
+		<script type="text/javascript" src="../jquery-easyui-1.6.6/locale/easyui-lang-zh_CN.js"></script>
+		<script type="text/javascript">
+			var addUrl = "../inSupplierInfo/addInSupplierInfo.do";
+			var modfiy = "../inSupplierInfo/updateInSupplierInfo.do";
+			var url = "";
+			
+			//FORM表单序列化转对象
+			function serializeObject(form) {
+				var o = {};
+				$.each(form.serializeArray(), function(index) {
+					if (o[this['name']]) {
+						o[this['name']] = o[this['name']] + "," + this['value'];
+					} else {
+						o[this['name']] = this['value'];
+					}
+				});
+				return o;
+			}
+			
+			$(function(){
+				init();
+				$("#dg").datagrid({
+					onClickRow:function(){
+						var row=$("#dg").datagrid("getSelected");
+						$("#workBookEditForm").form('load',row);
+						$("#dgDetail").datagrid('loadData',row.insupplierlinkman);
+					}
+				});
+				$("#inscname").focus(function(){
+					$.messager.confirm("提示","是否添加供应商类别？",function(r){
+			    		if(r){
+			    			$("#dlg2").dialog("open").dialog("setTitle","供应商类别");
+			    			$("#dg2").datagrid("reload");
+			    		}
+			    	});
+				});
+				$("#inslname").focus(function(){
+					$.messager.confirm("提示","是否添加供应商星级？",function(r){
+			    		if(r){
+			    			$("#dlg3").dialog("open").dialog("setTitle","供应商星级");
+			    			$("#dg3").datagrid("reload");
+			    		}
+			    	});
+				});
+				$("#insaname").focus(function(){
+					$.messager.confirm("提示","是否添加供应商区域？",function(r){
+			    		if(r){
+			    			$("#dlg4").dialog("open").dialog("setTitle","供应商区域");
+			    			$("#dg3").datagrid("reload");
+			    		}
+			    	});
+				});
+			});
+			
+			//主表添加
+			function newWorkBookInfo(){
+				$("#workBookEditForm").form("clear");
+				$("#dgDetail").datagrid('loadData',{
+					total:0,
+					rows:[]
+				});
+				$("#insiid").val("0");
+				$("#workBookEditForm :input").removeAttr("readonly");
+				$("#workBookEditForm :input").removeAttr("disabled","disabled");
+				$("#workBookEditForm").form("enableValidation");
+				$("#workBookDeatilAdd").linkbutton({disabled:false});
+				$("#workBookDeatilUpdate").linkbutton({disabled:false});
+				$("#workBookDeatilDel").linkbutton({disabled:false});
+				$("#workBookDeatilSav").linkbutton({disabled:false});
+				$("#workBookManager_editbtn").linkbutton({disabled:true});
+				$("#workBookManager_delbtn").linkbutton({disabled:true});
+				$("#workBookManager_canclebtn").linkbutton({disabled:false});
+				url = addUrl;
+			}
+			
+			//主表保存
+			function saveForm(){
+				var form = $("#workBookEditForm");
+				var inSupplierInfo = serializeObject(form);
+				var insupplierlinkman = $("#dgDetail").datagrid("getRows");
+				if(insupplierlinkman){
+					inSupplierInfo.insupplierlinkman = insupplierlinkman;
+				}
+				$.ajax({
+					url:url,
+					type:"post",
+					dataType:'json',
+					contentType:"application/json;charset=UTF-8",
+					data:JSON.stringify(inSupplierInfo),
+					success:function(result){
+						if(result.success){
+							$.messager.alert("提示","保存成功","info");
+							$("#dg").datagrid("reload");
+							init();
+						}else{
+							$.messager.alert("提示","保存失败","warning");
+						}
+					}, 
+					error:function(){
+						$.messager.alert("提示","系统繁忙","error");
+					}
+				});
+				url = "";
+			}
+			
+			function init(){
+				$("#dgDetail").datagrid('loadData',{
+					total:0,
+					rows:[]
+				});
+				$("#workBookEditForm").form("clear");
+				$("#workBookManager_savebtn").linkbutton({disabled:true});
+				$("#workBookManager_newbtn").linkbutton({disabled:false});
+				$("#workBookManager_editbtn").linkbutton({disabled:false});
+				$("#workBookManager_delbtn").linkbutton({disabled:false});
+				$("#workBookManager_canclebtn").linkbutton({disabled:true});
+				$("#workBookEditForm").form("disableValidation");
+				$("#workBookDeatilAdd").linkbutton({disabled:true});
+				$("#workBookDeatilUpdate").linkbutton({disabled:true});
+				$("#workBookDeatilDel").linkbutton({disabled:true});
+				$("#workBookDeatilSav").linkbutton({disabled:true});
+				$("#workBookEditForm :input").attr("readonly","readonly");
+			}
+			
+			//取消按钮事件
+			function cancleworkBook(){
+				init();
+				$("#workBookManager_editbtn").linkbutton({disabled:false});
+				$("#workBookManager_delbtn").linkbutton({disabled:false});
+			}
+			
+			//子表添加
+			function wbDetailManager(){
+				$("#dgDetail").datagrid("appendRow",{});
+				var editIndex_wbDetail = $("#dgDetail").datagrid("getRows").length - 1;
+				$("#dgDetail").datagrid("beginEdit",editIndex_wbDetail);
+			}
+			
+			//子表修改
+			function wbDetailModify(){
+				var rows = $("#dgDetail").datagrid("getRows");
+				$.each(rows,function(index,row){
+					var index = $("#dgDetail").datagrid("getRowIndex",row);
+					$("#dgDetail").datagrid("beginEdit",index);
+				});
+			}
+			
+			//子表删除
+			function wbDetailDelete(){
+				var rows = $("#dgDetail").datagrid("getSelections");
+				$.each(rows,function(index,row){
+					var index = $("#dgDetail").datagrid("getRowIndex",row);
+					$("#dgDetail").datagrid("deleteRow",index);
+				});
+			}
+			
+			//子表保存
+			function saveWb_detail(){
+				var endRows = $("#dgDetail").datagrid("getRows");
+				$.each(endRows,function(index,item){
+					$("#dgDetail").datagrid("endEdit",index);
+				});
+				$("#workBookManager_savebtn").linkbutton({disabled:false});
+			}
+			
+			//主表删除		
+			function delworkBook(){
+				var row = $("#dg").datagrid("getSelected");
+		    	if(row==null){
+		    		$.messager.alert("提示","请选择需要删除的数据","info");
+		    		return;
+		    	}
+		    	var insiid = row.insiid;
+		    	$.messager.confirm("提示","你确定要删除该条数据吗？",function(r){
+		    		if(r){
+		    			$.ajax({
+		    				url:'../inSupplierInfo/deleteInSupplierInfo.do',
+		    				type:'post',
+		    				dataType:'json',
+		    				data:{insiid,insiid},
+		    				success:function(result){
+		    					if(result.success){
+		    						$.messager.alert("系统提示","您已成功删除该条数据","info");
+									$("#dg").datagrid("reload");
+									init();
+		    					}else{
+		    						$.messager.alert("系统提示","删除失败","info");
+		    					}
+		    				},
+	    					error:function(){
+	    						$.messager.alert("系统提示","系统异常","warning");
+	    					}
+		    			});
+		    		}
+		    	});
+			}
+			
+			//主表修改
+			function editworkBook(){
+				var row = $("#dg").datagrid('getSelected');
+				if(row==null){
+					$.messager.alert('系统提示','请选择一条要编辑的数据！','info');
+					return;
+				}
+				$("#workBookEditForm :input").attr("readonly",false);
+				$("#workBookManager_newbtn").linkbutton({disabled:true});
+				$("#workBookManager_delbtn").linkbutton({disabled:true});
+				$("#workBookManager_savebtn").linkbutton({disabled:false});
+				$("#workBookManager_canclebtn").linkbutton({disabled:false});
+				$("#workBookDeatilAdd").linkbutton({disabled:false});
+				$("#workBookDeatilUpdate").linkbutton({disabled:false});
+				$("#workBookDeatilDel").linkbutton({disabled:false});
+				$("#workBookDeatilSav").linkbutton({disabled:false});
+				url=modfiy;
+			}
+			
+			/* 点击确定事件 */
+			/* 供货商类别 */
+			function chooseInsuppliercategory(){
+		    	var row=$("#dg2").datagrid("getSelected");
+		    	$("#inscid").val(row.inscid);
+				$("#inscname").val(row.inscname);
+				closeInsuppliercategoryDialog();
+		    }
+			
+			/* 供货商星级 */
+			function chooseInsupplierlevel(){
+		    	var row=$("#dg3").datagrid("getSelected");
+		    	$("#inslid").val(row.inslid);
+				$("#inslname").val(row.inslname);
+				closeInsupplierlevelDialog();
+		    }
+			
+			/* 供货商区域 */
+			function chooseInsupplierarea(){
+		    	var row=$("#dg4").datagrid("getSelected");
+		    	$("#insaid").val(row.insaid);
+				$("#insaname").val(row.insaname);
+				closeInsupplierareaDialog();
+		    }
+			
+			/* 点击取消事件 */
+			/* 供货商类别 */
+			function closeInsuppliercategoryDialog(){
+		    	$("#s_inscname").val("");
+				$('#dg2').datagrid('load',{
+					s_inscname:""
+				});
+				$("#dlg2").dialog("close");
+		    }
+			
+			/* 供货商星级 */
+			function closeInsupplierlevelDialog(){
+		    	$("#s_inslname").val("");
+				$('#dg3').datagrid('load',{
+					s_inslname:""
+				});
+				$("#dlg3").dialog("close");
+		    }
+			
+			/* 供货商区域 */
+			function closeInsupplierareaDialog(){
+		    	$("#s_insaname").val("");
+				$('#dg4').datagrid('load',{
+					s_insaname:""
+				});
+				$("#dlg4").dialog("close");
+		    }
+			
+			/* 搜索 */
+			/* 供货商类别 */
+			function searchInsi() {
+				$('#dg2').datagrid('load', {
+					s_inscname : $("#s_inscname").val()
+				});
+			}
+			
+			/* 供货商星级 */
+			function searchInsl() {
+				$('#dg3').datagrid('load', {
+					s_inslname : $("#s_inslname").val()
+				});
+			}
+			
+			/* 供货商区域 */
+			function searchInsa() {
+				$('#dg4').datagrid('load', {
+					s_insaname : $("#s_insaname").val()
+				});
+			}
+			
+		</script>
+	</head>
+	<body style="margin: 1px">
+		<div class="easyui-layout" data-options="fit:true">
+			<div data-options="region:'north'"
+				style="height: 32px; background-color: #E0ECFF; width: 1235px; background-position: initial initial; background-repeat: initial initial;">
+				<div style="float: right; padding-right: 20px">
+					名称: <input class="easyui-validatebox" style="width: 80px"
+						name="searchValue" id="searchValue"> <a
+						href="javascript:void(0)" class="easyui-linkbutton"
+						iconCls="icon-search" onclick="workBookManager.search()">查询</a>
+				</div>
+				<div>
+					<a id="workBookManager_newbtn" href="javascript:void(0)" onclick="newWorkBookInfo()" class="easyui-linkbutton" iconCls="icon-add" plain="true">
+						新建
+					</a>
+				    <a  id="workBookManager_editbtn" href="javascript:void(0)" onclick="editworkBook()" class="easyui-linkbutton" iconCls="icon-edit" plain="true">
+				    	修改
+				    </a> 
+					<a	id="workBookManager_delbtn" href="javascript:void(0)" onclick="delworkBook()" class="easyui-linkbutton" iconCls="icon-remove" plain="true">
+						删除
+					</a> 
+				    <a	id="workBookManager_savebtn" href="javascript:void(0)" onclick="saveForm()" class="easyui-linkbutton" iconCls="icon-save" plain="true">
+				    	保存
+				    </a>
+					<a  id="workBookManager_canclebtn" href="javascript:void(0)" onclick="cancleworkBook()" class="easyui-linkbutton" iconCls="icon-cancel" plain="true">
+						取消
+					</a>
+				</div>
+			</div>
+			<div data-options="region:'west',split:true"
+				style="width: 375px;">
+				<div class="easyui-layout" data-options="fit:true">		
+					<div data-options="region:'center'"> 		
+						<table id="dg" title="供应商信息管理列表" class="easyui-datagrid" fitColumns="true" pagination="true" rownumbers="true" url="../inSupplierInfo/findAllInSupplierInfo.do" fit="true" singleSelect="true">
+					     	<thead>
+					     		<tr>
+					     			<th field="insicode" width="20" align="center">供货商编码</th>
+									<th field="insiname" width="20" align="center"  data-options="sortable:true">供货商名称</th>
+									<th field="remark" width="20" align="center">备注</th>
+								</tr>
+					   		</thead>
+					   	</table>
+					</div>	
+				</div>
+			</div>
+			<div data-options="region:'center'" ">
+				<div id="tab_show" align="center" style="height:200px;background-color: #F7F7F7;margin-top:-16px" >
+					<h3 align="center">编辑框</h3>
+					<form id="workBookEditForm">
+						<input type="hidden" name="insiid" id="insiid" />
+						<table>
+							<tr>
+								<td><label>供货商编码：</label></td>
+								<td>
+									<input class="easyui-validatebox" type="text" id="insicode" name="insicode" data-options="required:true" maxlength="20" width="200px"/>
+								</td>
+								<td><label>供货商名称：</label></td>
+								<td>
+									<input class="easyui-validatebox" type="text" id="insiname" name="insiname" data-options="required:true" maxlength="20" width="200px"/>
+								</td>
+								<td><label>简拼：</label></td>
+								<td>
+									<input class="easyui-validatebox" type="text" id="spell" name="spell" data-options="required:true" maxlength="20" width="200px"/>
+								</td>
+							</tr>
+							<tr>
+								<td><label>供货商类别：</label></td>
+								<td>
+									<input type="hidden" name="inscid" id="inscid" />
+									<input class="easyui-validatebox" type="text" id="inscname" name="inscname" data-options="required:true" maxlength="20" width="200px"/>
+								</td>
+								<td><label>供货商星级：</label></td>
+								<td>
+									<input type="hidden" name="inslid" id="inslid" />
+									<input class="easyui-validatebox" type="text" id="inslname" name="inslname" data-options="required:true" maxlength="20" width="200px"/>
+								</td>
+								<td><label>供货商区域：</label></td>
+								<td>
+									<input type="hidden" name="insaid" id="insaid" />
+									<input class="easyui-validatebox" type="text" id="insaname" name="insaname" data-options="required:true" maxlength="20" width="200px"/>
+								</td>
+							</tr>
+							<tr>
+								<td><label>供货商地址：</label></td>
+								<td>
+									<input class="easyui-validatebox" type="text" id="insiaddress" name="insiaddress" data-options="required:true" maxlength="20" width="200px"/>
+								</td>
+								<td><label>联系电话：</label></td>
+								<td>
+									<input class="easyui-validatebox" type="text" id="insiphone" name="insiphone" data-options="required:true" maxlength="20" width="200px"/>
+								</td>
+								<td><label>营业执照号：</label></td>
+								<td>
+									<input class="easyui-validatebox" type="text" id="insilicense" name="insilicense" data-options="required:true" maxlength="20" width="200px"/>
+								</td>
+							</tr>
+							<tr>
+								<td><label>经营许可证号：</label></td>
+								<td>
+									<input class="easyui-validatebox" type="text" id="insipermitlicense" name="insipermitlicense" data-options="required:true" maxlength="20" width="200px"/>
+								</td>
+								<td><label>供货商法人：</label></td>
+								<td>
+									<input class="easyui-validatebox" type="text" id="insilegalman" name="insilegalman" data-options="required:true" maxlength="20" width="200px"/>
+								</td>
+								<td><label>供货商税号：</label></td>
+								<td>
+									<input class="easyui-validatebox" type="text" id="insitaxnum" name="insitaxnum" data-options="required:true" maxlength="20" width="200px"/>
+								</td>
+							</tr>
+							<tr>
+								<td><label>供货商开户行：</label></td>
+								<td>
+									<input class="easyui-validatebox" type="text" id="insibank" name="insibank" data-options="required:true" maxlength="20" width="200px"/>
+								</td>
+								<td><label>开户行账号：</label></td>
+								<td>
+									<input class="easyui-validatebox" type="text" id="insibankaccount" name="insibankaccount" data-options="required:true" maxlength="20" width="200px"/>
+								</td>
+								<td><label>备注：</label></td>
+								<td>
+									<input class="easyui-validatebox" type="text" id="remark" name="remark" data-options="required:true" maxlength="20" width="200px"/>
+								</td>
+							</tr>
+						</table>
+					</form>
+				</div>
+				
+				<div style="clear: both;"></div>
+				<div class="easyui-tabs" style="height: 400px;margin-top: -16px;">
+					<div title="供货商联系人" fit="true" data-options="border:true">
+						<table id="dgDetail" class="easyui-datagrid" fitColumns="true" pagination="true" rownumbers="true"  fit="true" toolbar="#tb">
+					     	<thead>
+					     		<tr>
+									<th field="cb" checkbox="true" align="center"></th>
+									<th field="inslmcode" width="40" align="center" data-options="editor:{type:'validatebox',options:{disabled:false,required: true}}">联系人编码</th>
+									<th field="inslmname" width="40" align="center" data-options="editor:{type:'validatebox',options:{disabled:false,required: true}}">联系人姓名</th>
+									<th field="spell" width="40" align="center" data-options="editor:{type:'validatebox',options:{disabled:false,required: true}}">简拼</th>
+									<th field="inslmphone" width="40" align="center" data-options="editor:{type:'validatebox',options:{disabled:false,required: true}}">联系人电话</th>
+									<th field="remark" width="40" align="center" data-options="editor:{type:'validatebox',options:{disabled:false}}">备注</th>
+								</tr>
+					   		</thead>
+					   	</table>
+						<div id="tb">
+							<div>
+								<a href="javascript:wbDetailManager()" class="easyui-linkbutton" iconCls="icon-add" plain="true" id="workBookDeatilAdd">添加</a>
+								<a href="javascript:wbDetailModify()" class="easyui-linkbutton" iconCls="icon-edit" plain="true" id="workBookDeatilUpdate">修改</a>
+								<a href="javascript:wbDetailDelete()" class="easyui-linkbutton" iconCls="icon-remove" plain="true" id="workBookDeatilDel">删除</a>
+								<a href="javascript:saveWb_detail()" class="easyui-linkbutton" iconCls="icon-save" plain="true" id="workBookDeatilSav">保存</a>
+					      	</div>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+		
+		<!-- 供货商类别 -->
+		<div id="dlg2" class="easyui-dialog" style="width: 500px;height: 480px;padding:10px 20px;" closed="true" buttons="#dlg2-buttons">
+			<div style="height: 40px" align="center">
+				供应商类别名称：<input type="text" id="s_inscname" name="s_inscname" onkeydown="if(event.keyCode==13) searchInsi()"/>
+				<a href="javascript:searchInsi()" class="easyui-linkbutton" iconCls="icon-search" plain="true">搜索</a>
+			</div>
+			<div style="height: 350px;">
+				<table id="dg2" title="供货商类别" class="easyui-datagrid" fitColumns="true" pagination="true" rownumbers="true" fit="true" singleSelect="true" url="../insuppliercategory/findInsuppliercategory.do">
+					<thead>
+						<tr>
+							<th field="inscid" align="center" hidden="true"></th>
+							<th field="insccode" width="50" align="center">类别编码</th>
+							<th field="inscname" width="100" align="center">类别名称</th>
+							<th field="remark" width="50" align="center">备注</th>
+						</tr>
+					</thead>
+				</table>
+			</div>
+		</div>
+		<div id="dlg2-buttons">
+			<a href="javascript:chooseInsuppliercategory()" class="easyui-linkbutton" iconCls="icon-ok">确定</a>
+			<a href="javascript:closeInsuppliercategoryDialog()" class="easyui-linkbutton" iconCls="icon-cancel">关闭</a>
+		</div>
+		
+		<!-- 供货商星级 -->
+		<div id="dlg3" class="easyui-dialog" style="width: 500px;height: 480px;padding:10px 20px;" closed="true" buttons="#dlg3-buttons">
+			<div style="height: 40px" align="center">
+				供应商星级名称：<input type="text" id="s_inslname" name="s_inslname" onkeydown="if(event.keyCode==13) searchInsl()"/>
+				<a href="javascript:searchInsl()" class="easyui-linkbutton" iconCls="icon-search" plain="true">搜索</a>
+			</div>
+			<div style="height: 350px;">
+				<table id="dg3" title="供货商星级" class="easyui-datagrid" fitColumns="true" pagination="true" rownumbers="true" fit="true" singleSelect="true" url="../insupplierlevel/findInsupplierlevel.do">
+					<thead>
+						<tr>
+							<th field="inslid" align="center" hidden="true"></th>
+							<th field="inslcode" width="50" align="center">星级编码</th>
+							<th field="inslname" width="100" align="center">星级名称</th>
+							<th field="remark" width="50" align="center">备注</th>
+						</tr>
+					</thead>
+				</table>
+			</div>
+		</div>
+		<div id="dlg3-buttons">
+			<a href="javascript:chooseInsupplierlevel()" class="easyui-linkbutton" iconCls="icon-ok">确定</a>
+			<a href="javascript:closeInsupplierlevelDialog()" class="easyui-linkbutton" iconCls="icon-cancel">关闭</a>
+		</div>
+		
+		<!-- 供货商区域 -->
+		<div id="dlg4" class="easyui-dialog" style="width: 500px;height: 480px;padding:10px 20px;" closed="true" buttons="#dlg4-buttons">
+			<div style="height: 40px" align="center">
+				供应商区域名称：<input type="text" id="s_insaname" name="s_insaname" onkeydown="if(event.keyCode==13) searchInsa()"/>
+				<a href="javascript:searchInsa()" class="easyui-linkbutton" iconCls="icon-search" plain="true">搜索</a>
+			</div>
+			<div style="height: 350px;">
+				<table id="dg4" title="供货商类别" class="easyui-datagrid" fitColumns="true" pagination="true" rownumbers="true" fit="true" singleSelect="true" url="../insupplierarea/findInsupplierarea.do">
+					<thead>
+						<tr>
+							<th field="insaid" align="center" hidden="true"></th>
+							<th field="insacode" width="50" align="center">区域编码</th>
+							<th field="insaname" width="100" align="center">区域名称</th>
+							<th field="remark" width="50" align="center">备注</th>
+						</tr>
+					</thead>
+				</table>
+			</div>
+		</div>
+		<div id="dlg4-buttons">
+			<a href="javascript:chooseInsupplierarea()" class="easyui-linkbutton" iconCls="icon-ok">确定</a>
+			<a href="javascript:closeInsupplierareaDialog()" class="easyui-linkbutton" iconCls="icon-cancel">关闭</a>
+		</div>
+	</body>
+</html>
